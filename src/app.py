@@ -1,9 +1,21 @@
 from flask import Flask
-
-app = Flask(__name__)
-
+from flask import Flask
+from src.models.database_setup import db
 from src.routes.routes import main
-app.register_blueprint(main)
 
-def run_server():
-    return app.run(port=3000, debug=True)
+
+
+def create_app():
+    """Construct the core application."""
+    app = Flask(__name__, instance_relative_config=False)
+    app.config.from_object('config.Config')
+    db.init_app(app)
+    from src.models.database_setup import ma
+    ma.init_app(app)
+    with app.app_context():
+        print(db)
+        app.register_blueprint(main)
+        db.create_all()  # Create sql tables for our data models
+
+        return app
+
