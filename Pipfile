@@ -16,6 +16,7 @@ marshmallow-sqlalchemy = "*"
 psycopg2-binary = "*"
 sqlalchemy = "*"
 python-dotenv = "*"
+requests = "*"
 
 [requires]
 python_version = "3.8"
