@@ -17,6 +17,7 @@ psycopg2-binary = "*"
 sqlalchemy = "*"
 python-dotenv = "*"
 requests = "*"
+flask-bcrypt = "*"
 
 [requires]
 python_version = "3.8"

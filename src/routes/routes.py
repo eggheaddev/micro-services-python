@@ -1,8 +1,12 @@
 from flask import Blueprint, request
 from src.models.database_setup import User, user_schema, users_schema
 from src.app import db
-from werkzeug.security import generate_password_hash
+from flask_bcrypt import Bcrypt
+
+
 main = Blueprint("main", __name__)
+flask_bcrypt = Bcrypt()
+
 
 @main.route("/")
 def index():
@@ -13,10 +17,9 @@ def create_new_user():
   email = request.json['email']
   password = request.json['password']
 
-  new_user= User(name, email, password=generate_password_hash(password, method="sha256"))
+  new_user= User(name, email, password=flask_bcrypt.generate_password_hash(password).decode("utf-8"))
 
   db.session.add(new_user)
   db.session.commit()
 
   return user_schema.jsonify(new_user)
-
