@@ -23,3 +23,17 @@ def create_new_user():
   db.session.commit()
 
   return user_schema.jsonify(new_user)
+
+
+@main.route('/validate_user',methods=['POST'])
+def validate_user():
+  name = request.json['name']
+  email = request.json['email']
+  password = request.json['password']
+
+  user = User.query.filter_by(email=email).first()
+
+  if not user or not flask_bcrypt.check_password_hash(user.password, password):
+    return "Please check your login details and try again"
+
+  return "successful validation"
