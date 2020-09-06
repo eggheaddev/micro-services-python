@@ -1,6 +1,6 @@
 from flask import Blueprint, request
-from src.models.database_setup import User, user_schema, users_schema
-from src.app import db
+from .models import User, user_schema, users_schema
+from .app import db
 from flask_bcrypt import Bcrypt
 
 

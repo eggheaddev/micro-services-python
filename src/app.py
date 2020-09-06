@@ -1,7 +1,7 @@
 from flask import Flask
 from flask import Flask
-from src.models.database_setup import db
-from src.routes.routes import main
+from .models import db
+from .views import main
 
 
 
@@ -12,10 +12,10 @@ def create_app():
 
     db.init_app(app)
 
-    from src.routes.routes import flask_bcrypt
+    from .views import flask_bcrypt
     flask_bcrypt.init_app(app)
 
-    from src.models.database_setup import ma
+    from .models import ma
     ma.init_app(app)
     with app.app_context():
         print(db)
