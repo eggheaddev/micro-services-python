@@ -8,8 +8,6 @@ verify_ssl = true
 [packages]
 gunicorn = "*"
 flask = "*"
-flask-mysql = "*"
-pymysql = "*"
 flask-sqlalchemy = "*"
 flask-marshmallow = "*"
 marshmallow-sqlalchemy = "*"
