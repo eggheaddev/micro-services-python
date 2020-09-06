@@ -69,7 +69,10 @@ def create_new_user():
     return jsonify({'Message': 'User Created Succesfuly'})
 
 @main.route('/user/<public_id>', methods=['GET'])
-def promote_user(public_id):
+@token_required
+def promote_user(current_user, public_id):
+    if not current_user.admin:
+        return jsonify({'message' : 'Cannot perform that function!'})
     user = User.query.filter_by(public_id=public_id).first()
     if not user:
         return jsonify({"message": 'No user Found'})
