@@ -13,19 +13,19 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(70))
     email = db.Column(db.String(70),unique=True)
-    password = db.Column(db.String(100))
+    password_hash = db.Column(db.String(100))
     created_at = db.Column(db.Date, default=_get_date)
 
-    def __init__(self, name, email, password):
+    def __init__(self, name, email, password_hash):
         self.name = name
         self.email = email
-        self.password = password
+        self.password_hash = password_hash
 
 
 
 class UserSchema(ma.Schema):
     class Meta:
-        fields = ('id', 'name', 'email', 'password')
+        fields = ('id', 'name', 'email', 'password_hash')
 
 
 user_schema = UserSchema()
