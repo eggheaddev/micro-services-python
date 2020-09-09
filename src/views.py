@@ -88,15 +88,11 @@ def validate_user():
     if not auth or not auth.username or not auth.password:
         return make_response("Please check your login details and try again", 401, {'WWW-Authenticate': 'Basic realm="Login required!"'})
 
-    name = request.json['name']
-    email = request.json['email']
-    password = request.json['password']
+    user = User.query.filter_by(email=auth.username).first()
 
-    user = User.query.filter_by(email=email).first()
-
-    if not user or not flask_bcrypt.check_password_hash(user.password, password):
+    if not user or not flask_bcrypt.check_password_hash(user.password, auth.password):
         return make_response("Please check your login details and try again", 401, {'WWW-Authenticate': 'Basic realm="Login required!"'})
-    if flask_bcrypt.check_password_hash(user.password, password):
+    if flask_bcrypt.check_password_hash(user.password, auth.password):
         token = jwt.encode({'public_id': user.public_id, 'exp': datetime.datetime.utcnow(
         ) + datetime.timedelta(minutes=30)}, os.environ.get('SECRET_KEY'))
         res = make_response("User Verification Sucessfuly", 200)
