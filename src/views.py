@@ -60,6 +60,11 @@ def create_new_user():
     email = request.json['email']
     password = request.json['password']
 
+    user = User.query.filter_by(email=email).first()
+
+    if user:
+        return make_response("An account with this email already exists. If it's yours, go to login", 409)
+
     new_user = User(name=name, email=email, password=flask_bcrypt.generate_password_hash(
         password).decode("utf-8"))
 
