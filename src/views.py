@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify, make_response
 from .models import User, user_schema, users_schema
 from flask_bcrypt import Bcrypt
-from functools import wraps
+from .utils import token_required
+from flask import current_app
 from .app import db
 import datetime
 import jwt
@@ -13,27 +14,6 @@ flask_bcrypt = Bcrypt()
 # Decorator to protetec our routes for non-register users
 
 
-def token_required(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        token = None
-
-        if 'x-access-token' in request.headers:
-            token = request.headers['x-access-token']
-
-        if not token:
-            return jsonify({'message': 'Token is missing!'}), 401
-
-        try:
-            data = jwt.decode(token, os.environ.get('SECRET_KEY'))
-            current_user = User.query.filter_by(
-                public_id=data['public_id']).first()
-        except:
-            return jsonify({'message': 'Token is invalid!'}), 401
-
-        return f(current_user, *args, **kwargs)
-
-    return decorated
 
 #This routes is only for the admins for see all the users register in the database
 @main.route("/")
@@ -99,7 +79,7 @@ def validate_user():
         return make_response("Please check your login details and try again", 401, {'WWW-Authenticate': 'Basic realm="Login required!"'})
     if flask_bcrypt.check_password_hash(user.password, auth.password):
         token = jwt.encode({'public_id': user.public_id, 'exp': datetime.datetime.utcnow(
-        ) + datetime.timedelta(minutes=30)}, os.environ.get('SECRET_KEY'))
+        ) + datetime.timedelta(minutes=30)}, current_app.config['SECRET_KEY'])
         res = make_response("User Verification Sucessfuly", 200)
         res.set_cookie("x-access-token", value= token)
         return res
