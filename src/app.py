@@ -1,3 +1,4 @@
+from .utils import create_micro_service_connection
 from flask import Flask
 from flask import Flask
 from .models import db
@@ -10,8 +11,12 @@ def create_app():
     app = Flask(__name__, instance_relative_config=False)
     app.config.from_object('config.Config')
 
-    db.init_app(app)
+    if not app.config['ACCESS_TOKEN']:
+        print("Making a new connection with the nodeJS service...")
+        create_micro_service_connection()
 
+    db.init_app(app)
+    print(app.config['ACCESS_TOKEN'])
     from .views import flask_bcrypt
     flask_bcrypt.init_app(app)
 
