@@ -11,14 +11,21 @@ import os
 main = Blueprint("main", __name__)
 flask_bcrypt = Bcrypt()
 
-# Decorator to protetec our routes for non-register users
 
 
 
-#This routes is only for the admins for see all the users register in the database
-@main.route("/")
+@main.route("/admin-db")
 @token_required
 def get_all_users(current_user):
+    '''
+    This routes is only for the admins for see all the users register in the database
+
+    params:
+    current_user (string): token id for the verification
+
+    return:
+    A json with all information of the users
+    '''
     if not current_user.admin:
         return jsonify({'message' : 'Cannot perform that function!'})
     users = User.query.all()
@@ -36,6 +43,13 @@ def get_all_users(current_user):
 
 @main.route('/new_user', methods=['POST'])
 def create_new_user():
+    '''
+    /new_user root will create a new user to the database
+    this will recieve the information of the client and collect the information to keep it in th db
+
+    return:
+    a json message
+    '''
     name = request.json['name']
     email = request.json['email']
     password = request.json['password']
@@ -53,9 +67,17 @@ def create_new_user():
 
     return jsonify({'Message': 'User Created Succesfuly'})
 
-@main.route('/user/<public_id>', methods=['GET'])
+@main.route('/user-promotion/<public_id>', methods=['PUT'])
 @token_required
 def promote_user(current_user, public_id):
+    '''
+    /user-promotion/<public-id route will promote an user to admin
+    only an admin can use this route for promote another user
+
+    params:
+    current_id (String): token of the user admin
+    public_id (string): user's id who will be promote
+    '''
     if not current_user.admin:
         return jsonify({'message' : 'Cannot perform that function!'})
     user = User.query.filter_by(public_id=public_id).first()
@@ -68,6 +90,12 @@ def promote_user(current_user, public_id):
 
 @main.route('/validate_user', methods=['GET'])
 def validate_user():
+    '''
+    /validate_user route will validate the user who login and send the current user information in a token 
+
+    returns:
+    a http response and set the cookies token
+    '''
     auth = request.authorization
 
     if not auth or not auth.username or not auth.password:

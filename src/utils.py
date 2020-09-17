@@ -5,7 +5,7 @@ import requests
 import socket
 import jwt
 
-
+# Decorator to protetec our routes for non-register users
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
