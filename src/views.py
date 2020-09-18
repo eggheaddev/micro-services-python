@@ -12,6 +12,9 @@ main = Blueprint("main", __name__)
 flask_bcrypt = Bcrypt()
 
 
+@main.route("/")
+def index():
+    return " "
 
 
 @main.route("/admin-db")
