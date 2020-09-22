@@ -94,7 +94,7 @@ def promote_user(current_user, public_id):
     return jsonify({'message': '{} has been promoted'.format(user.name)})
 
 
-@main.route('/login', methods=['GET'])
+@main.route('/authorize', methods=['GET'])
 def get_user_token():
     '''
     /validate_user route will validate the user who login and send the current user information in a token
@@ -116,7 +116,7 @@ def get_user_token():
         ) + datetime.timedelta(minutes=30)}, current_app.config['SECRET_KEY'])
         res = make_response("User Verification Sucessfuly", 200)
         res.set_cookie("x-access-token", value=token)
-        return res, token
+        return res
 
     return make_response("Please check your login details and try again", 401, {'WWW-Authenticate': 'Basic realm="Login required!"'})
 
