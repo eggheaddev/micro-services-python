@@ -12,9 +12,11 @@ main = Blueprint("main", __name__)
 flask_bcrypt = Bcrypt()
 
 
+
 @main.route("/")
 def index():
-    return " "
+    return "Hello"
+
 
 
 @main.route("/admin-db")
@@ -30,7 +32,7 @@ def get_all_users(current_user):
     A json with all information of the users
     '''
     if not current_user.admin:
-        return jsonify({'message' : 'Cannot perform that function!'})
+        return jsonify({'message': 'Cannot perform that function!'})
     users = User.query.all()
     output = []
     for user in users:
@@ -70,6 +72,7 @@ def create_new_user():
 
     return jsonify({'Message': 'User Created Succesfuly'})
 
+
 @main.route('/user-promotion/<public_id>', methods=['PUT'])
 @token_required
 def promote_user(current_user, public_id):
@@ -82,7 +85,7 @@ def promote_user(current_user, public_id):
     public_id (string): user's id who will be promote
     '''
     if not current_user.admin:
-        return jsonify({'message' : 'Cannot perform that function!'})
+        return jsonify({'message': 'Cannot perform that function!'})
     user = User.query.filter_by(public_id=public_id).first()
     if not user:
         return jsonify({"message": 'No user Found'})
@@ -91,10 +94,10 @@ def promote_user(current_user, public_id):
     return jsonify({'message': '{} has been promoted'.format(user.name)})
 
 
-@main.route('/validate_user', methods=['GET'])
-def validate_user():
+@main.route('/login', methods=['GET'])
+def get_user_token():
     '''
-    /validate_user route will validate the user who login and send the current user information in a token 
+    /validate_user route will validate the user who login and send the current user information in a token
 
     returns:
     a http response and set the cookies token
@@ -112,7 +115,18 @@ def validate_user():
         token = jwt.encode({'public_id': user.public_id, 'exp': datetime.datetime.utcnow(
         ) + datetime.timedelta(minutes=30)}, current_app.config['SECRET_KEY'])
         res = make_response("User Verification Sucessfuly", 200)
-        res.set_cookie("x-access-token", value= token)
-        return res
+        res.set_cookie("x-access-token", value=token)
+        return res, token
 
     return make_response("Please check your login details and try again", 401, {'WWW-Authenticate': 'Basic realm="Login required!"'})
+
+
+@main.route('/api/validate')
+@token_required
+def validate_user_token(current_user):
+
+    user = User.query.filter_by(public_id=current_user.public_id).first()
+    if not user:
+        return make_response("This user does not exist, try again or register", 401, {'WWW-Authenticate': 'Basic realm="Login required!"'})
+
+    return make_response("User Verification Sucessfuly", 200)
