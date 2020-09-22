@@ -12,6 +12,13 @@ main = Blueprint("main", __name__)
 flask_bcrypt = Bcrypt()
 
 
+
+@main.route("/")
+def index():
+    return "Hello"
+
+
+
 @main.route("/admin-db")
 @token_required
 def get_all_users(current_user):
