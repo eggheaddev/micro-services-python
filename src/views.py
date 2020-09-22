@@ -118,7 +118,7 @@ def get_user_token():
 @token_required
 def validate_user_token(current_user):
 
-    user = User.query.filter_by()
+    user = User.query.filter_by(public_id=current_user.public_id).first()
     if not user:
         return make_response("This user does not exist, try again or register", 401, {'WWW-Authenticate': 'Basic realm="Login required!"'})
 
