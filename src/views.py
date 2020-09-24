@@ -130,3 +130,8 @@ def validate_user_token(current_user):
         return make_response({"Message":"This user does not exist, try again or register"}, 404)
 
     return make_response({"Message":"User Verification Sucessfuly", "error": False}, 200)
+
+@main.route('/api/storage/notification', methods=['POST'])
+def watch_observer():
+
+    return jsonify(request.json)
