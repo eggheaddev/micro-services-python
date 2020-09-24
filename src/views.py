@@ -62,7 +62,7 @@ def create_new_user():
     user = User.query.filter_by(email=email).first()
 
     if user:
-        return make_response("An account with this email already exists. If it's yours, go to login", 409)
+        return make_response({"message": "An account with this email already exists. If it's yours, go to login", "error": True}, 409)
 
     new_user = User(name=name, email=email, password=flask_bcrypt.generate_password_hash(
         password).decode("utf-8"))
@@ -70,7 +70,7 @@ def create_new_user():
     db.session.add(new_user)
     db.session.commit()
 
-    return jsonify({'Message': 'User Created Succesfuly'})
+    return make_response(jsonify({'message': 'User Created Succesfuly', 'error': False}), 201)
 
 
 @main.route('/user-promotion/<public_id>', methods=['PUT'])
@@ -85,10 +85,10 @@ def promote_user(current_user, public_id):
     public_id (string): user's id who will be promote
     '''
     if not current_user.admin:
-        return jsonify({'message': 'Cannot perform that function!'})
+        return jsonify({'message': 'Cannot perform that function!', "error": True}), 401
     user = User.query.filter_by(public_id=public_id).first()
     if not user:
-        return jsonify({"message": 'No user Found'})
+        return jsonify({"message": 'No user Found', "error": True}), 404
     user.admin = True
     db.session.commit()
     return jsonify({'message': '{} has been promoted'.format(user.name)})
@@ -105,20 +105,20 @@ def get_user_token():
     auth = request.authorization
 
     if not auth or not auth.username or not auth.password:
-        return make_response("Please check your login details and try again", 401, {'WWW-Authenticate': 'Basic realm="Login required!"'})
+        return make_response({"message":"Please check your login details and try again", "error": True}, 401)
 
     user = User.query.filter_by(email=auth.username).first()
 
     if not user or not flask_bcrypt.check_password_hash(user.password, auth.password):
-        return make_response("Please check your login details and try again", 401, {'WWW-Authenticate': 'Basic realm="Login required!"'})
+        return make_response({"message":"Please check your login details and try again", "error": True}, 401)
     if flask_bcrypt.check_password_hash(user.password, auth.password):
         token = jwt.encode({'public_id': user.public_id, 'exp': datetime.datetime.utcnow(
-        ) + datetime.timedelta(minutes=30)}, current_app.config['SECRET_KEY'])
-        res = make_response("User Verification Sucessfuly", 200)
+        ) + datetime.timedelta(minutes=60)}, current_app.config['SECRET_KEY'])
+        res = make_response({"message":"User Verification Sucessfuly", "error": False}, 200)
         res.set_cookie("x-access-token", value=token)
         return res
 
-    return make_response("Please check your login details and try again", 401, {'WWW-Authenticate': 'Basic realm="Login required!"'})
+    return make_response({"message":"Please check your login details and try again", "error": True}, 401)
 
 
 @main.route('/api/validate')
@@ -127,6 +127,6 @@ def validate_user_token(current_user):
 
     user = User.query.filter_by(public_id=current_user.public_id).first()
     if not user:
-        return make_response("This user does not exist, try again or register", 401, {'WWW-Authenticate': 'Basic realm="Login required!"'})
+        return make_response({"Message":"This user does not exist, try again or register"}, 404)
 
-    return make_response("User Verification Sucessfuly", 200)
+    return make_response({"Message":"User Verification Sucessfuly", "error": False}, 200)
