@@ -38,7 +38,7 @@ def get_all_users(current_user):
     for user in users:
         user_data = {}
         user_data['public_id'] = user.public_id
-        user_data['name'] = user.name
+        user_data['username'] = user.username
         user_data['email'] = user.email
         user_data['password'] = user.password
         user_data['admin'] = user.admin
@@ -55,16 +55,19 @@ def create_new_user():
     return:
     a json message
     '''
-    name = request.json['name']
+    username = request.json['username']
     email = request.json['email']
     password = request.json['password']
 
-    user = User.query.filter_by(email=email).first()
+    user_email = User.query.filter_by(email=email).first()
+    user_name = User.query.filter_by(username=username).first()
 
-    if user:
+    if user_email:
         return make_response({"message": "An account with this email already exists. If it's yours, go to login", "error": True}, 409)
+    if user_name:
+        return make_response({"message": "An account with this username already exists. If it's yours, go to login", "error": True}, 409)
 
-    new_user = User(name=name, email=email, password=flask_bcrypt.generate_password_hash(
+    new_user = User(username=username, email=email, password=flask_bcrypt.generate_password_hash(
         password).decode("utf-8"))
 
     db.session.add(new_user)
@@ -91,7 +94,7 @@ def promote_user(current_user, public_id):
         return jsonify({"message": 'No user Found', "error": True}), 404
     user.admin = True
     db.session.commit()
-    return jsonify({'message': '{} has been promoted'.format(user.name)})
+    return jsonify({'message': '{} has been promoted'.format(user.username)})
 
 
 @main.route('/authorize', methods=['GET'])
@@ -108,6 +111,9 @@ def get_user_token():
         return make_response({"message":"Please check your login details and try again", "error": True}, 401)
 
     user = User.query.filter_by(email=auth.username).first()
+
+    if not user:
+        user = User.query.filter_by(username=auth.username).first()
 
     if not user or not flask_bcrypt.check_password_hash(user.password, auth.password):
         return make_response({"message":"Please check your login details and try again", "error": True}, 401)
