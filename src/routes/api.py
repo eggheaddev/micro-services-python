@@ -1,52 +1,26 @@
 from flask import Blueprint, request, jsonify, make_response
-from .models import User, user_schema, users_schema
+from src.models import User, user_schema, users_schema
 from flask_bcrypt import Bcrypt
-from .utils import token_required
+from ..middleware.utils import token_required, service_connection
 from flask import current_app
-from .app import db
+from src.app import db
 import datetime
 import jwt
 import os
 
-main = Blueprint("main", __name__)
+api = Blueprint("main", __name__)
 flask_bcrypt = Bcrypt()
 
 
 
-@main.route("/")
+@api.route("/")
 def index():
     return "Hello"
 
 
 
-@main.route("/admin-db")
-@token_required
-def get_all_users(current_user):
-    '''
-    This routes is only for the admins for see all the users register in the database
-
-    params:
-    current_user (string): token id for the verification
-
-    return:
-    A json with all information of the users
-    '''
-    if not current_user.admin:
-        return jsonify({'message': 'Cannot perform that function!'})
-    users = User.query.all()
-    output = []
-    for user in users:
-        user_data = {}
-        user_data['public_id'] = user.public_id
-        user_data['username'] = user.username
-        user_data['email'] = user.email
-        user_data['password'] = user.password
-        user_data['admin'] = user.admin
-        output.append(user_data)
-    return jsonify({'users': output}), 200
-
-
-@main.route('/new_user', methods=['POST'])
+@api.route('/new_user', methods=['POST'])
+@service_connection
 def create_new_user():
     '''
     /new_user root will create a new user to the database
@@ -58,7 +32,6 @@ def create_new_user():
     username = request.json['username']
     email = request.json['email']
     password = request.json['password']
-
     user_email = User.query.filter_by(email=email).first()
     user_name = User.query.filter_by(username=username).first()
 
@@ -73,31 +46,11 @@ def create_new_user():
     db.session.add(new_user)
     db.session.commit()
 
-    return make_response(jsonify({'message': 'User Created Succesfuly', 'error': False}), 201)
+    return make_response(jsonify({'message': 'User Created Succesfuly', 'error': False, 'username': new_user.username, 'userID': new_user.public_id}), 201)
 
 
-@main.route('/user-promotion/<public_id>', methods=['PUT'])
-@token_required
-def promote_user(current_user, public_id):
-    '''
-    /user-promotion/<public-id route will promote an user to admin
-    only an admin can use this route for promote another user
 
-    params:
-    current_id (String): token of the user admin
-    public_id (string): user's id who will be promote
-    '''
-    if not current_user.admin:
-        return jsonify({'message': 'Cannot perform that function!', "error": True}), 401
-    user = User.query.filter_by(public_id=public_id).first()
-    if not user:
-        return jsonify({"message": 'No user Found', "error": True}), 404
-    user.admin = True
-    db.session.commit()
-    return jsonify({'message': '{} has been promoted'.format(user.username)})
-
-
-@main.route('/authorize', methods=['GET'])
+@api.route('/authorize', methods=['GET'])
 def get_user_token():
     '''
     /validate_user route will validate the user who login and send the current user information in a token
@@ -127,7 +80,7 @@ def get_user_token():
     return make_response({"message":"Please check your login details and try again", "error": True}, 401)
 
 
-@main.route('/api/validate')
+@api.route('/validate')
 @token_required
 def validate_user_token(current_user):
 
@@ -137,7 +90,7 @@ def validate_user_token(current_user):
 
     return make_response({"Message":"User Verification Sucessfuly", "error": False}, 200)
 
-@main.route('/api/storage/notification', methods=['POST'])
+@api.route('/storage/notification', methods=['POST'])
 def watch_observer():
 
     return jsonify(request.json)
