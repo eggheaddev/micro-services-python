@@ -86,7 +86,4 @@ def validate_user_token(current_user):
         return make_response({'message':'This user does not exist, try again or register', 'error': True  }, 404)
 
 
-    return make_response({'message':'User Verification Sucessfuly', 'error': False, '_data': {
-        'username': user.username,
-        'public_id': user.public_id
-    }}, 200)
+    return make_response({'message':'User Verification Sucessfuly', 'error': False, 'username': user.username}, 200)
