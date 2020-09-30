@@ -35,22 +35,15 @@ def token_required(f):
     return decorated
 
 
-def service_connection(f):
+def service_connection(f, url):
     @wraps(f)
     def decorated(*args, **kwargs):
         token = current_app.config['ACCESS_TOKEN']
         ses = requests.session()
         headers = {"access_token": token}
-        user_info = f(**kwargs)
-        resp = ses.post('http://127.0.0.1:3000/api/test', json={
-            "user": str(user_info.json["username"]),
-            "public_id": str(user_info.json["userID"])
-        })
-        user = User.query.filter_by(public_id=user_info.json['userID']).first()
-        user.storage_id = str(resp.json())
-        db.session.commit()
-        print(user_info.json)
-        return user_info
+
+        resp = ses.get(url, headers = headers)
+        return resp.json()
     return decorated
 
 
@@ -62,13 +55,9 @@ def create_micro_service_connection():
     ses = requests.session()
     response = ses.post(url, data={
         "ip": ip_address,
-        "ServiceName": "backend test",
+        "ServiceName": hostname,
         "description": "test backend service"
     })
-    f = open('.env', 'a')
-    f.write("access_token='{}'".format(ses.cookies['access_token']))
-    f.close()
-    cookieJar = ses.cookies
     for cookie in cookieJar:
         print(cookie)
     print(response.text)
