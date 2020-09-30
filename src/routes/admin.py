@@ -1,13 +1,14 @@
 from flask import Blueprint, request, jsonify, make_response
-from src.models import User, user_schema, users_schema
-from ..middleware.utils import token_required
+from src.models import User, Staff
+from ..middleware.access_verification import token_required
 from src.app import db
+from flask_bcrypt import Bcrypt
 
+flask_bcrypt = Bcrypt()
 admin = Blueprint("admin", __name__)
 
 
 @admin.route("/db")
-
 def get_all_users():
     '''
     This routes is only for the admins for see all the users register in the database
@@ -28,28 +29,36 @@ def get_all_users():
         user_data['username'] = user.username
         user_data['email'] = user.email
         user_data['password'] = user.password
-        user_data['admin'] = user.admin
-        user_data['storage_id'] = user.storage_id
         output.append(user_data)
     return jsonify({'users': output}), 200
 
 
-@admin.route('/user-promotion/<public_id>', methods=['PUT'])
-@token_required
-def promote_user(current_user, public_id):
-    '''
-    /user-promotion/<public-id route will promote an user to admin
-    only an admin can use this route for promote another user
 
-    params:
-    current_id (String): token of the user admin
-    public_id (string): user's id who will be promote
+
+@admin.route('/staff', methods=['POST'])
+def new_staff():
     '''
-    if not current_user.admin:
-        return jsonify({'message': 'Cannot perform that function!', "error": True}), 401
-    user = User.query.filter_by(public_id=public_id).first()
-    if not user:
-        return jsonify({"message": 'No user Found', "error": True}), 404
-    user.admin = True
+    /staff root will create a new user staff to the database
+    this will recieve the information of the client and collect the information to keep it in th db
+
+    return:
+    a json message
+    '''
+    username = request.json['username']
+    email = request.json['email']
+    password = request.json['password']
+    user_email = Staff.query.filter_by(email=email).first()
+    user_name = Staff.query.filter_by(username=username).first()
+
+    if user_email:
+        return make_response({"message": "An account with this email already exists. If it's yours, go to login", "error": True}, 409)
+    if user_name:
+        return make_response({"message": "An account with this username already exists. If it's yours, go to login", "error": True}, 409)
+
+    new_user = Staff(username=username, email=email, password=flask_bcrypt.generate_password_hash(
+        password).decode("utf-8"))
+
+    db.session.add(new_user)
     db.session.commit()
-    return jsonify({'message': '{} has been promoted'.format(user.username)})
+
+    return make_response(jsonify({'message': 'User Created Succesfuly', 'error': False, 'username': new_user.username, 'userID': new_user.public_id, "Admin": new_user.admin}), 201)
