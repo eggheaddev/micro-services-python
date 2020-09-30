@@ -1,16 +1,18 @@
-from .middleware.utils import create_micro_service_connection
+from .middleware.access_verification import create_micro_service_connection
+from .routes.controller import page_not_found, method_not_allowed
 from flask import Flask
 from flask import Flask
 from .models import db
 from .routes.api import api
 from .routes.admin import admin
-
-
+from .routes.packages import storage
 
 def create_app():
     """Construct the core application."""
     app = Flask(__name__, instance_relative_config=False)
     app.config.from_object('config.Config')
+    app.register_error_handler(404, page_not_found)
+    app.register_error_handler(405, method_not_allowed)
 
     if not app.config['ACCESS_TOKEN']:
         print("Making a new connection with the nodeJS service...")
@@ -24,10 +26,10 @@ def create_app():
     from .models import ma
     ma.init_app(app)
     with app.app_context():
-        print(db)
         app.register_blueprint(api, url_prefix='/api')
         app.register_blueprint(admin, url_prefix='/api/admin')
+        app.register_blueprint(storage, url_prefix='/api/storage')
+        print(db)
         db.create_all()  # Create sql tables for our data models
 
         return app
-

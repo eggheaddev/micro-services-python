@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, make_response
-from src.models import User, user_schema, users_schema
+from src.models import User
 from flask_bcrypt import Bcrypt
-from ..middleware.utils import token_required, service_connection
+from ..middleware.access_verification import token_required, service_connection
 from flask import current_app
 from src.app import db
 import datetime
@@ -18,9 +18,7 @@ def index():
     return "Hello"
 
 
-
 @api.route('/new_user', methods=['POST'])
-@service_connection
 def create_new_user():
     '''
     /new_user root will create a new user to the database
@@ -49,7 +47,6 @@ def create_new_user():
     return make_response(jsonify({'message': 'User Created Succesfuly', 'error': False, 'username': new_user.username, 'userID': new_user.public_id}), 201)
 
 
-
 @api.route('/authorize', methods=['GET'])
 def get_user_token():
     '''
@@ -61,7 +58,7 @@ def get_user_token():
     auth = request.authorization
 
     if not auth or not auth.username or not auth.password:
-        return make_response({"message":"Please check your login details and try again", "error": True}, 401)
+        return make_response({"message": "Please check your login details and try again", "error": True}, 401)
 
     user = User.query.filter_by(email=auth.username).first()
 
@@ -69,28 +66,27 @@ def get_user_token():
         user = User.query.filter_by(username=auth.username).first()
 
     if not user or not flask_bcrypt.check_password_hash(user.password, auth.password):
-        return make_response({"message":"Please check your login details and try again", "error": True}, 401)
+        return make_response({"message": "Please check your login details and try again", "error": True}, 401)
     if flask_bcrypt.check_password_hash(user.password, auth.password):
-        token = jwt.encode({'public_id': user.public_id, 'exp': datetime.datetime.utcnow(
+        token = jwt.encode({'public_id': user.public_id, 'username': user.username, 'exp': datetime.datetime.utcnow(
         ) + datetime.timedelta(minutes=60)}, current_app.config['SECRET_KEY'])
-        res = make_response({"message":"User Verification Sucessfuly", "error": False}, 200)
+        res = make_response(
+            {"message": "User Verification Sucessfuly", "error": False}, 200)
         res.set_cookie("x-access-token", value=token)
         return res
 
-    return make_response({"message":"Please check your login details and try again", "error": True}, 401)
+    return make_response({"message": "Please check your login details and try again", "error": True}, 401)
 
-
-@api.route('/validate')
+@api.route('/validate', methods=['POST'])
 @token_required
 def validate_user_token(current_user):
 
     user = User.query.filter_by(public_id=current_user.public_id).first()
     if not user:
-        return make_response({"Message":"This user does not exist, try again or register"}, 404)
+        return make_response({'message':'This user does not exist, try again or register', 'error': True  }, 404)
 
-    return make_response({"Message":"User Verification Sucessfuly", "error": False}, 200)
 
-@api.route('/storage/notification', methods=['POST'])
-def watch_observer():
-
-    return jsonify(request.json)
+    return make_response({'message':'User Verification Sucessfuly', 'error': False, '_data': {
+        'username': user.username,
+        'public_id': user.public_id
+    }}, 200)
