@@ -20,7 +20,7 @@ class abstractUser():
     created_at = db.Column(db.Date, default=_get_date)
 class User(db.Model, abstractUser):
 
-    __tablename__ = 'users'
+    __tablename__ = "users"
 
     def __init__(self, username, email, password):
         self.username = username
@@ -30,7 +30,7 @@ class User(db.Model, abstractUser):
 
 class UserSchema(ma.Schema):
     class Meta:
-        fields = ('id', 'public_id', 'username', 'email', 'password')
+        fields = ("id", "public_id", "username", "email", "password")
 
 
 user_schema = UserSchema()
@@ -39,7 +39,7 @@ users_schema = UserSchema(many=True)
 
 class Staff(db.Model, abstractUser):
 
-    __tablename__ = 'staff'
+    __tablename__ = "staff"
     admin = db.Column(db.Boolean, default=True)
     def __init__(self, username, email, password):
 
@@ -47,7 +47,7 @@ class Staff(db.Model, abstractUser):
 
 class StaffSchema(ma.Schema):
     class Meta:
-        fields = ('id', 'public_id', 'username', 'email', 'password', 'admin')
+        fields = ("id", "public_id", "username", "email", "password", "admin")
 
 
 staff_schema = StaffSchema()
