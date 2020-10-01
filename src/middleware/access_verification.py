@@ -11,23 +11,23 @@ def token_required(f):
     def decorated(*args, **kwargs):
         token = None
 
-        if 'x-access-token' in request.headers:
-            token = request.headers['x-access-token']
+        if "x-access-token" in request.headers:
+            token = request.headers["x-access-token"]
 
         if not token:
             return jsonify({
-                'message': 'Token is missing!',
-                'error': True
+                "message": "Token is missing!",
+                "error": True
                 }), 403
 
         try:
-            data = jwt.decode(token, current_app.config['SECRET_KEY'])
+            data = jwt.decode(token, current_app.config["SECRET_KEY"])
             current_user = User.query.filter_by(
-                public_id=data['public_id']).first()
+                public_id=data["public_id"]).first()
         except:
             return jsonify({
-                'message': 'Token is invalid!',
-                'error': True
+                "message": "Token is invalid!",
+                "error": True
                 }), 403
 
         return f(current_user, *args, **kwargs)
@@ -38,7 +38,7 @@ def token_required(f):
 def service_connection(f, url):
     @wraps(f)
     def decorated(*args, **kwargs):
-        token = current_app.config['ACCESS_TOKEN']
+        token = current_app.config["ACCESS_TOKEN"]
         ses = requests.session()
         headers = {"access_token": token}
 
@@ -49,7 +49,7 @@ def service_connection(f, url):
 
 
 def create_micro_service_connection():
-    url = 'http://localhost:3000/connect'
+    url = "http://localhost:3000/connect"
     hostname = socket.gethostname()
     ip_address = socket.gethostbyname(hostname)
     ses = requests.session()

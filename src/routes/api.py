@@ -18,18 +18,18 @@ def index():
     return "Hello"
 
 
-@api.route('/new_user', methods=['POST'])
+@api.route("/new_user", methods=["POST"])
 def create_new_user():
-    '''
+    """
     /new_user root will create a new user to the database
     this will recieve the information of the client and collect the information to keep it in th db
 
     return:
     a json message
-    '''
-    username = request.json['username']
-    email = request.json['email']
-    password = request.json['password']
+    """
+    username = request.json["username"]
+    email = request.json["email"]
+    password = request.json["password"]
     user_email = User.query.filter_by(email=email).first()
     user_name = User.query.filter_by(username=username).first()
 
@@ -44,17 +44,17 @@ def create_new_user():
     db.session.add(new_user)
     db.session.commit()
 
-    return make_response(jsonify({'message': 'User Created Succesfuly', 'error': False, 'username': new_user.username, 'userID': new_user.public_id}), 201)
+    return make_response(jsonify({"message": "User Created Succesfuly", "error": False, "username": new_user.username, "userID": new_user.public_id}), 201)
 
 
-@api.route('/authorize', methods=['GET'])
+@api.route("/authorize", methods=["GET"])
 def get_user_token():
-    '''
+    """
     /validate_user route will validate the user who login and send the current user information in a token
 
     returns:
     a http response and set the cookies token
-    '''
+    """
     auth = request.authorization
 
     if not auth or not auth.username or not auth.password:
@@ -68,8 +68,8 @@ def get_user_token():
     if not user or not flask_bcrypt.check_password_hash(user.password, auth.password):
         return make_response({"message": "Please check your login details and try again", "error": True}, 401)
     if flask_bcrypt.check_password_hash(user.password, auth.password):
-        token = jwt.encode({'public_id': user.public_id, 'username': user.username, 'exp': datetime.datetime.utcnow(
-        ) + datetime.timedelta(minutes=60)}, current_app.config['SECRET_KEY'])
+        token = jwt.encode({"public_id": user.public_id, "username": user.username, "exp": datetime.datetime.utcnow() 
+        + datetime.timedelta(minutes=60)}, current_app.config["SECRET_KEY"])
         res = make_response(
             {"message": "User Verification Sucessfuly", "error": False}, 200)
         res.set_cookie("x-access-token", value=token)
@@ -77,13 +77,13 @@ def get_user_token():
 
     return make_response({"message": "Please check your login details and try again", "error": True}, 401)
 
-@api.route('/validate', methods=['POST'])
+@api.route("/validate", methods=["POST"])
 @token_required
 def validate_user_token(current_user):
 
     user = User.query.filter_by(public_id=current_user.public_id).first()
     if not user:
-        return make_response({'message':'This user does not exist, try again or register', 'error': True  }, 404)
+        return make_response({"message":"This user does not exist, try again or register", "error": True  }, 404)
 
 
-    return make_response({'message':'User Verification Sucessfuly', 'error': False, 'username': user.username}, 200)
+    return make_response({"message":"User Verification Sucessfuly", "error": False, "username": user.username}, 200)
