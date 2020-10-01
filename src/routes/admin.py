@@ -1,15 +1,18 @@
-from flask import Blueprint, request, jsonify, make_response
+from flask import Blueprint, request, jsonify, make_response, current_app, redirect, url_for
 from src.models import User, Staff
-from ..middleware.access_verification import token_required
+from ..middleware.access_verification import token_required, admin_verificate
 from src.app import db
 from flask_bcrypt import Bcrypt
+import jwt
+import datetime
 
 flask_bcrypt = Bcrypt()
 admin = Blueprint("admin", __name__)
 
 
 @admin.route("/db")
-def get_all_users():
+@admin_verificate
+def get_all_users(res):
     """
     This routes is only for the admins for see all the users register in the database
 
@@ -19,8 +22,7 @@ def get_all_users():
     return:
     A json with all information of the users
     """
-    # if not current_user.admin:
-    #     return jsonify({"message": "Cannot perform that function!"})
+
     users = User.query.all()
     output = []
     for user in users:
@@ -33,10 +35,9 @@ def get_all_users():
     return jsonify({"users": output}), 200
 
 
-
-
 @admin.route("/staff", methods=["POST"])
-def new_staff():
+@admin_verificate
+def new_staff(res):
     """
     /staff root will create a new user staff to the database
     this will recieve the information of the client and collect the information to keep it in th db
@@ -47,12 +48,14 @@ def new_staff():
     username = request.json["username"]
     email = request.json["email"]
     password = request.json["password"]
-    user_email = Staff.query.filter_by(email=email).first()
-    user_name = Staff.query.filter_by(username=username).first()
+    staff_email = Staff.query.filter_by(email=email).first()
+    staff_name = Staff.query.filter_by(username=username).first()
+    user_email = User.query.filter_by(email=email).first()
+    user_name = User.query.filter_by(username=username).first()
 
-    if user_email:
+    if staff_email or user_email:
         return make_response({"message": "An account with this email already exists. If it's yours, go to login", "error": True}, 409)
-    if user_name:
+    if staff_name or user_name:
         return make_response({"message": "An account with this username already exists. If it's yours, go to login", "error": True}, 409)
 
     new_user = Staff(username=username, email=email, password=flask_bcrypt.generate_password_hash(
