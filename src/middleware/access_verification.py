@@ -1,9 +1,15 @@
-from flask import request, jsonify, current_app, Response
+from flask import request, jsonify, current_app, Response, make_response
 from functools import wraps
-from src.models import User, db
+from src.models import User, Staff, db
+from flask_bcrypt import Bcrypt
+import datetime
 import requests
 import socket
 import jwt
+
+
+
+flask_bcrypt = Bcrypt()
 
 # Decorator to protetec our routes for non-register users
 def token_required(f):
@@ -46,6 +52,31 @@ def service_connection(f, url):
         return resp.json()
     return decorated
 
+
+
+def admin_verificate(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth = request.authorization
+
+        if not auth or not auth.username or not auth.password:
+            return make_response({"message": "You are not an administrator or your details are not correct, please check your login details and try again", "error": True}, 401)
+
+        user_admin = Staff.query.filter_by(email=auth.username).first()
+
+        if not user_admin:
+            user_admin = Staff.query.filter_by(username=auth.username).first()
+
+        if not user_admin or not flask_bcrypt.check_password_hash(user_admin.password, auth.password):
+            return make_response({"message": "You are not an administrator or your details are not correct, please check your login details and try again", "error": True}, 401)
+        if flask_bcrypt.check_password_hash(user_admin.password, auth.password):
+            token = jwt.encode({"public_id": user_admin.public_id, "username": user_admin.username, "exp": datetime.datetime.utcnow()
+            + datetime.timedelta(minutes=60)}, current_app.config["SECRET_KEY"])
+            res = make_response({"message": "User Verification Sucessfuly", "error": False}, 200)
+            res.set_cookie("x-access-token", value=token)
+            return f(res, *args, **kwargs)
+
+    return decorated
 
 
 def create_micro_service_connection():
