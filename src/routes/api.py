@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, make_response
-from src.models import User
+from src.models import User, Staff
 from flask_bcrypt import Bcrypt
 from ..middleware.access_verification import token_required, service_connection
 from flask import current_app
@@ -32,10 +32,12 @@ def create_new_user():
     password = request.json["password"]
     user_email = User.query.filter_by(email=email).first()
     user_name = User.query.filter_by(username=username).first()
+    staff_email = Staff.query.filter_by(email=email).first()
+    staff_name = Staff.query.filter_by(username=username).first()
 
-    if user_email:
+    if user_email or staff_email:
         return make_response({"message": "An account with this email already exists. If it's yours, go to login", "error": True}, 409)
-    if user_name:
+    if user_name or staff_name:
         return make_response({"message": "An account with this username already exists. If it's yours, go to login", "error": True}, 409)
 
     new_user = User(username=username, email=email, password=flask_bcrypt.generate_password_hash(
