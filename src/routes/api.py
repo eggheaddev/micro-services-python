@@ -80,17 +80,24 @@ def get_user_token():
     if not user:
         user = User.query.filter_by(username=auth.username).first()
 
-    if not user or not flask_bcrypt.check_password_hash(user.password, auth.password):
-        return make_response({
-            "message": "Please check your login details and try again", 
-            "error": True}, 401)
+        if not user:
+            return make_response({
+                "message": "This user does not exists, please go and register",
+                "error": True
+            }, 404)
+
+        elif not flask_bcrypt.check_password_hash(user.password, auth.password):
+            return make_response({
+                "message": "Please check your login details and try again",
+                "error": True}, 401)
+
     if flask_bcrypt.check_password_hash(user.password, auth.password):
         #toke is available for 7 days
         token = jwt.encode({
             "public_id": user.public_id,
             "username": user.username,
             "exp": datetime.datetime.utcnow()
-        + datetime.timedelta(minutes=10080)}, current_app.config["SECRET_KEY"])
+            + datetime.timedelta(minutes=10080)}, current_app.config["SECRET_KEY"])
 
         res = make_response(
             {"message": "User Verification Sucessfuly", "error": False}, 200)
