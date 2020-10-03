@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, make_response, current_app, redirect, url_for
 from flask_bcrypt import Bcrypt
+from flask_cors import cross_origin
 import datetime
 import jwt
 from src.models import User, Staff
@@ -11,6 +12,7 @@ admin = Blueprint("admin", __name__)
 
 
 @admin.route("/db")
+@cross_origin()
 @admin_verificate
 def get_all_users(res):
     """

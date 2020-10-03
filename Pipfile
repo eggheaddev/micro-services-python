@@ -19,6 +19,7 @@ python-dotenv = "*"
 requests = "*"
 flask-bcrypt = "*"
 pyjwt = "*"
+flask-cors = "*"
 
 [requires]
 python_version = "3.8.5"

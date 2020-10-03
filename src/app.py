@@ -1,7 +1,7 @@
 from .middleware.access_verification import create_micro_service_connection
 from .routes.controller import page_not_found, method_not_allowed
 from flask import Flask
-from flask import Flask
+from flask_cors import CORS
 from .models import db
 from .routes.api import api
 from .routes.admin import admin
@@ -13,7 +13,7 @@ def create_app():
     app.config.from_object("config.Config")
     app.register_error_handler(404, page_not_found)
     app.register_error_handler(405, method_not_allowed)
-
+    CORS(app)
     if not app.config["ACCESS_TOKEN"]:
         print("Making a new connection with the nodeJS service...")
         create_micro_service_connection()
