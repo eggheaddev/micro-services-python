@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, make_response, current_app
 from flask_bcrypt import Bcrypt
+from flask_cors import cross_origin
 import datetime
 import jwt
 import os
@@ -13,11 +14,14 @@ flask_bcrypt = Bcrypt()
 
 
 @api.route("/")
+@cross_origin()
 def index():
-    return "Hello"
+    response = jsonify({"message": "I'm Awake"})
+    return  response
 
 
 @api.route("/new_user", methods=["POST"])
+@cross_origin()
 def create_new_user():
     """
     /new_user root will create a new user to the database
@@ -59,7 +63,8 @@ def create_new_user():
         "userID": new_user.public_id}), 201)
 
 
-@api.route("/authorize", methods=["GET"])
+@api.route("/authorize", methods=["POST"])
+@cross_origin()
 def get_user_token():
     """
     /authorize route will validate the user who login and send the current user information in a token
@@ -67,18 +72,19 @@ def get_user_token():
     returns:
     a http response and set the cookies token
     """
-    auth = request.authorization
 
-    if not auth or not auth.username or not auth.password:
+    username = request.json["username"]
+    password = request.json["password"]
+    if not username or not password:
 
         return make_response({
-            "message": "Please check your login details and try again", 
+            "message": "Please check your login details and try again",
             "error": True}, 401)
 
-    user = User.query.filter_by(email=auth.username).first()
+    user = User.query.filter_by(email=username).first()
 
     if not user:
-        user = User.query.filter_by(username=auth.username).first()
+        user = User.query.filter_by(username=username).first()
 
         if not user:
             return make_response({
@@ -86,12 +92,12 @@ def get_user_token():
                 "error": True
             }, 404)
 
-        elif not flask_bcrypt.check_password_hash(user.password, auth.password):
+        elif not flask_bcrypt.check_password_hash(user.password, password):
             return make_response({
                 "message": "Please check your login details and try again",
                 "error": True}, 401)
 
-    if flask_bcrypt.check_password_hash(user.password, auth.password):
+    if flask_bcrypt.check_password_hash(user.password, password):
         #toke is available for 7 days
         token = jwt.encode({
             "public_id": user.public_id,

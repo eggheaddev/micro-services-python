@@ -68,8 +68,6 @@ def admin_verificate(f):
         if flask_bcrypt.check_password_hash(user_admin.password, auth.password):
 
             res = make_response({"message": "User Verification Sucessfuly", "error": False}, 200)
-            res.set_cookie("x-access-token", value=token)
-            print(user_admin.email)
             return f(res, *args, **kwargs)
 
     return decorated
