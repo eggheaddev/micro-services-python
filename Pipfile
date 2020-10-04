@@ -1,0 +1,25 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+pylint = "*"
+autopep8 = "*"
+
+[packages]
+gunicorn = "*"
+flask = "*"
+flask-sqlalchemy = "*"
+flask-marshmallow = "*"
+marshmallow-sqlalchemy = "*"
+psycopg2-binary = "*"
+sqlalchemy = "*"
+python-dotenv = "*"
+requests = "*"
+flask-bcrypt = "*"
+pyjwt = "*"
+flask-cors = "*"
+
+[requires]
+python_version = "3.8.5"
