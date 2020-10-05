@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, make_response, current_app
 from flask_bcrypt import Bcrypt
 from flask_cors import cross_origin
+import requests
 import datetime
 import jwt
 import os
@@ -105,10 +106,13 @@ def get_user_token():
             "exp": datetime.datetime.utcnow()
             + datetime.timedelta(minutes=10080)}, current_app.config["SECRET_KEY"])
 
-        res = make_response(
-            {"message": "User Verification Sucessfuly", "error": False}, 200)
+        res = make_response({
+            "message": "User Verification Sucessfuly",
+            "error": False,
+            "x-access-token": str(token)[(str(token).index("'") + 1) : str(token).index("'", 2)]
+            }, 200)
+        res.set_cookie("x-access-token", value=token, samesite='Lax', secure=True)
 
-        res.set_cookie("x-access-token", value=token)
         return res
 
     return make_response({
