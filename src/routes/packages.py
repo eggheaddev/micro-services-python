@@ -22,7 +22,7 @@ def get_all_packages():
 
     return make_response(pkg_info, 200)
 
-@storage.route("/package", methods=["GET"])
+@storage.route("/package", methods=["POST"])
 @cross_origin()
 def get_one_package():
 
